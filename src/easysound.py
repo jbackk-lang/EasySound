@@ -18,3 +18,25 @@ def smooth_audio(signal, window_size=5):
     smoothed = np.convolve(signal, kernel, mode='same')
 
     return smoothed
+
+def soften_peaks(signal, threshold=0.8, reduction=0.5):
+    """
+    Łagodzi ostre piki w sygnale.
+    threshold – powyżej jakiej wartości uznajemy próbkę za 'za ostrą'
+    reduction – o ile zmniejszamy ostre piki
+    """
+    signal = np.array(signal, dtype=float)
+
+    peaks = np.abs(signal) > threshold
+    signal[peaks] *= reduction
+
+    return signal
+
+def human_friendly(signal):
+    """
+    Tryb 'dla ludzi' – wygładza dźwięk i usuwa ostre piki.
+    Idealne dla osób wrażliwych na ostre dźwięki.
+    """
+    s = smooth_audio(signal, window_size=7)
+    s = soften_peaks(s, threshold=0.7, reduction=0.6)
+    return s
