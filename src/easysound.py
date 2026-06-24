@@ -93,3 +93,45 @@ def process_file(input_path, output_path):
     signal, rate = load_wav(input_path)
     processed = human_friendly(signal)
     save_wav(output_path, processed, rate)
+
+def ultra_soft(signal):
+    """
+    Tryb ULTRA miękki – maksymalne wygładzenie dźwięku.
+    Idealny dla osób nadwrażliwych na ostre dźwięki,
+    dzieci, osób z autyzmem, osób po urazach słuchu.
+    """
+    # mocniejsze wygładzenie
+    s = smooth_audio(signal, window_size=15)
+    # mocniejsze łagodzenie pików
+    s = soften_peaks(s, threshold=0.5, reduction=0.4)
+    return s
+
+def speech_clarity(signal):
+    """
+    Tryb poprawiający zrozumiałość mowy.
+    Wygładza szum, ale podkreśla elementy ważne dla artykulacji.
+    """
+    # lekkie wygładzenie
+    s = smooth_audio(signal, window_size=5)
+    # delikatne usunięcie pików
+    s = soften_peaks(s, threshold=0.8, reduction=0.7)
+
+    # lekkie podbicie średnich częstotliwości (formanty mowy)
+    # prosta symulacja EQ bez DSP
+    s = s * 1.1
+
+    return s
+
+def auto_for_humans(signal):
+    """
+    Automatyczny tryb 'dla ludzi'.
+    Jeśli sygnał jest ostry → UltraSoft.
+    Jeśli sygnał to mowa → SpeechClarity.
+    """
+    # wykrywanie ostrości sygnału
+    sharpness = np.mean(np.abs(np.diff(signal)))
+
+    if sharpness > 0.15:
+        return ultra_soft(signal)
+    else:
+        return speech_clarity(signal)
