@@ -78,3 +78,102 @@ redukować stres wywołany ostrymi bodźcami,
 poprawiać komunikację.
 
 To narzędzie wspierające, nie medyczne.
+
+EasySound
+Biblioteka audio wspomagająca słuch — wygładzanie, łagodzenie pików, poprawa mowy.  
+Python · WAV → WAV · 6 trybów przetwarzania
+
+EasySound to lekka biblioteka do łagodzenia dźwięku dla osób wrażliwych słuchowo, z wadami słuchu, po urazach, z hiperakuzją, APD, autyzmem lub po prostu dla każdego, kto chce mieć „miększy”, przyjemniejszy dźwięk.
+Działa na plikach WAV i oferuje 6 trybów psychoakustycznych.
+
+✨ Funkcje
+wygładzanie sygnału (okno Hanninga)
+
+redukcja ostrych pików
+
+poprawa zrozumiałości mowy
+
+automatyczne wykrywanie kliknięć i impulsów
+
+obsługa WAV (load → process → save)
+
+6 trybów przetwarzania
+
+🎧 Zastosowania (praktyczne)
+✔ Niedosłuch wysokoczęstotliwościowy
+Tryb: speech  
+Poprawia zrozumiałość mowy, łagodzi sybilanty.
+
+✔ Nadwrażliwość słuchowa (hiperakuzja, autyzm, ADHD)
+Tryb: ultra  
+Maksymalne wygładzenie, brak ostrych dźwięków.
+
+✔ Rehabilitacja po urazach słuchu / szumy uszne
+Tryb: human  
+Łagodny, naturalny dźwięk bez nagłych skoków.
+
+✔ Problemy z przetwarzaniem słuchowym (APD)
+Tryb: speech  
+Wzmacnia sygnał mowy, redukuje szum tła.
+
+✔ Dzieci wrażliwe na dźwięki
+Tryb: human  
+Miękkie bajki, brak agresywnych sybilantów.
+
+✔ Osoby starsze z aparatami słuchowymi
+Tryb: auto  
+Wykrywa kliknięcia i przełącza się na ultra_soft.
+
+🧪 Przykłady użycia
+1. Wygładzenie ostrego nagrania
+python
+from easysound import process_file
+process_file("raw.wav", "soft.wav", mode="human")
+2. Usuwanie kliknięć i trzasków
+python
+process_file("podcast.wav", "podcast_clean.wav", mode="auto")
+3. Poprawa mowy (wykład, spotkanie)
+python
+process_file("wyklad.wav", "wyklad_clarity.wav", mode="speech")
+4. Nagrania terenowe (wiatr, ruch uliczny)
+python
+process_file("field.wav", "field_soft.wav", mode="auto")
+🎚 Tryby przetwarzania
+Tryb	Opis
+human	miękkie wygładzenie + redukcja ostrych elementów
+ultra	maksymalne wygładzenie dla bardzo wrażliwych uszu
+speech	poprawa zrozumiałości mowy, kontrola sybilantów
+auto	automatyczne wykrywanie ostrości i kliknięć
+smooth_audio	surowe wygładzenie oknem Hanninga
+soften_peaks	redukcja pików powyżej progu
+
+
+🔧 Pipeline WAV
+python
+signal, rate = load_wav("input.wav")
+processed = human_friendly(signal)
+save_wav("output.wav", processed, rate)
+📦 Instalacja (lokalna)
+bash
+git clone https://github.com/jbackk-lang/EasySound
+cd EasySound
+python3 examples/example.py
+🧠 Jak to działa (w skrócie)
+wygładzanie: okno Hanninga + konwolucja
+
+redukcja pików: threshold + scaling
+
+auto: analiza pochodnej sygnału (średnia + maksymalny impuls)
+
+speech: wygładzenie + kontrola sybilantów + bezpieczny clip
+
+✔ Status
+9 funkcji działa
+
+6 trybów przetwarzania
+
+pipeline WAV kompletny
+
+testy przechodzą
+
+brak błędów importu
