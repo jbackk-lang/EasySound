@@ -1,4 +1,7 @@
 import numpy as np
+import numpy as np
+import wave
+import struct
 
 def smooth_audio(signal, window_size=5):
     """
@@ -40,3 +43,53 @@ def human_friendly(signal):
     s = smooth_audio(signal, window_size=7)
     s = soften_peaks(s, threshold=0.7, reduction=0.6)
     return s
+
+def load_wav(path):
+    """
+    Wczytuje plik WAV i zwraca:
+    - próbki jako listę floatów
+    - częstotliwość próbkowania (sample rate)
+    """
+    with wave.open(path, 'rb') as w:
+        channels = w.getnchannels()
+        sample_width = w.getsampwidth()
+        framerate = w.getframerate()
+        frames = w.getnframes()
+
+        raw = w.readframes(frames)
+        fmt = "<" + "h" * (len(raw) // 2)
+        data = struct.unpack(fmt, raw)
+
+        # jeśli stereo → bierzemy tylko lewy kanał
+        if channels == 2:
+            data = data[::2]
+
+        # normalizacja do -1..1
+        signal = np.array(data) / 32768.0
+
+        return signal, framerate
+
+
+def save_wav(path, signal, framerate):
+    """
+    Zapisuje sygnał audio (float -1..1) do pliku WAV.
+    """
+    # konwersja na int16
+    data = (np.array(signal) * 32767).astype(np.int16)
+
+    with wave.open(path, 'wb') as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(framerate)
+
+        raw = struct.pack("<" + "h" * len(data), *data)
+        w.writeframes(raw)
+
+def process_file(input_path, output_path):
+    """
+    Wczytuje plik, wygładza go i zapisuje wynik.
+    Tryb 'dla ludzi' – łagodny, miękki dźwięk.
+    """
+    signal, rate = load_wav(input_path)
+    processed = human_friendly(signal)
+    save_wav(output_path, processed, rate)
