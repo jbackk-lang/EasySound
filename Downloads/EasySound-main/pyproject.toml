@@ -1,0 +1,9 @@
+[project]
+name = "easysound"
+version = "0.0.1"
+description = "Biblioteka wygładzająca dźwięk dla łatwiejszego słuchania i mówienia."
+authors = [{name = "Jacek"}]
+requires-python = ">=3.10"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
