@@ -1,4 +1,5 @@
 import numpy as np
+
 WINDOWS = {
     5: np.hanning(5).astype(np.float32),
     7: np.hanning(7).astype(np.float32),
@@ -22,10 +23,11 @@ def smooth_audio(signal, window_size=7):
     signal = np.array(signal, dtype=np.float32)
     if window_size < 3:
         return signal
-   window = WINDOWS.get(window_size)
+
+    window = WINDOWS.get(window_size)
     if window is None:
-    window = np.hanning(window_size).astype(np.float32)
-    window /= window.sum()
+        window = np.hanning(window_size).astype(np.float32)
+        window /= window.sum()
 
     return np.convolve(signal, window, mode='same')
 
@@ -49,39 +51,26 @@ def soften_peaks(signal, threshold=0.8, reduction=0.5):
 # ---------------------------------------------------------
 
 def human_friendly(signal):
-    """
-    Tryb 'dla ludzi' – miękkie wygładzenie i redukcja ostrych elementów.
-    """
     s = smooth_audio(signal, window_size=9)
     s = soften_peaks(s, threshold=0.7, reduction=0.6)
     return s
 
 
 def ultra_soft(signal):
-    """
-    Tryb ULTRA miękki – maksymalne wygładzenie dla bardzo wrażliwych uszu.
-    """
     s = smooth_audio(signal, window_size=21)
     s = soften_peaks(s, threshold=0.5, reduction=0.4)
     return s
 
 
 def speech_clarity(signal):
-    """
-    Tryb poprawiający zrozumiałość mowy.
-    """
     s = smooth_audio(signal, window_size=5)
     s = soften_peaks(s, threshold=0.85, reduction=0.7)
     s = s * 1.1
-    s = np.clip(s, -1.0, 1.0)   # zabezpieczenie przed przesterem
+    s = np.clip(s, -1.0, 1.0)
     return s
 
 
 def auto_for_humans(signal):
-    """
-    Automatyczny tryb – wybiera UltraSoft lub SpeechClarity
-    w zależności od ostrości sygnału i impulsów.
-    """
     signal = np.array(signal, dtype=np.float32)
     diff = np.diff(signal)
 
@@ -114,14 +103,11 @@ def load_wav(path):
         if channels == 2:
             data = data[::2]
 
-        signal = np.array(signal, dtype=np.float32)
+        signal = np.array(data, dtype=np.float32) / 32768.0
         return signal, framerate
 
 
 def save_wav(path, signal, framerate):
-    """
-    Zapisuje sygnał float (-1..1) do pliku WAV mono.
-    """
     data = (np.array(signal) * 32767).astype(np.int16)
 
     with wave.open(path, 'wb') as w:
@@ -138,10 +124,6 @@ def save_wav(path, signal, framerate):
 # ---------------------------------------------------------
 
 def process_file(input_path, output_path, mode="human"):
-    """
-    Pełny pipeline: wczytaj → przetwórz → zapisz.
-    mode: 'human', 'ultra', 'speech', 'auto'
-    """
     signal, rate = load_wav(input_path)
 
     if mode == "human":
