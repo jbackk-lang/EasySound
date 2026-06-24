@@ -1,4 +1,13 @@
 import numpy as np
+WINDOWS = {
+    5: np.hanning(5).astype(np.float32),
+    7: np.hanning(7).astype(np.float32),
+    9: np.hanning(9).astype(np.float32),
+    21: np.hanning(21).astype(np.float32),
+}
+for k in WINDOWS:
+    WINDOWS[k] /= WINDOWS[k].sum()
+
 import wave
 import struct
 
@@ -10,11 +19,14 @@ def smooth_audio(signal, window_size=7):
     """
     Wygładzanie sygnału audio za pomocą okna Hanninga i konwolucji.
     """
-    signal = np.array(signal, dtype=float)
+    signal = np.array(signal, dtype=np.float32)
     if window_size < 3:
         return signal
-    window = np.hanning(window_size)
+   window = WINDOWS.get(window_size)
+    if window is None:
+    window = np.hanning(window_size).astype(np.float32)
     window /= window.sum()
+
     return np.convolve(signal, window, mode='same')
 
 
@@ -26,7 +38,7 @@ def soften_peaks(signal, threshold=0.8, reduction=0.5):
     """
     Łagodzenie ostrych pików powyżej progu.
     """
-    signal = np.array(signal, dtype=float)
+    signal = np.array(signal, dtype=np.float32)
     peaks = np.abs(signal) > threshold
     signal[peaks] *= reduction
     return signal
@@ -70,7 +82,7 @@ def auto_for_humans(signal):
     Automatyczny tryb – wybiera UltraSoft lub SpeechClarity
     w zależności od ostrości sygnału i impulsów.
     """
-    signal = np.array(signal, dtype=float)
+    signal = np.array(signal, dtype=np.float32)
     diff = np.diff(signal)
 
     sharpness = np.mean(np.abs(diff))
@@ -102,7 +114,7 @@ def load_wav(path):
         if channels == 2:
             data = data[::2]
 
-        signal = np.array(data) / 32768.0
+        signal = np.array(signal, dtype=np.float32)
         return signal, framerate
 
 
