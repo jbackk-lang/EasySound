@@ -2,6 +2,10 @@ import numpy as np
 import wave
 import struct
 
+# ---------------------------------------------------------
+# 1. Wygładzanie sygnału (Hanning)
+# ---------------------------------------------------------
+
 def smooth_audio(signal, window_size=7):
     """
     Wygładzanie sygnału audio za pomocą okna Hanninga i konwolucji.
@@ -14,6 +18,10 @@ def smooth_audio(signal, window_size=7):
     return np.convolve(signal, window, mode='same')
 
 
+# ---------------------------------------------------------
+# 2. Łagodzenie ostrych pików
+# ---------------------------------------------------------
+
 def soften_peaks(signal, threshold=0.8, reduction=0.5):
     """
     Łagodzenie ostrych pików powyżej progu.
@@ -23,6 +31,10 @@ def soften_peaks(signal, threshold=0.8, reduction=0.5):
     signal[peaks] *= reduction
     return signal
 
+
+# ---------------------------------------------------------
+# 3. Tryby przetwarzania
+# ---------------------------------------------------------
 
 def human_friendly(signal):
     """
@@ -49,20 +61,30 @@ def speech_clarity(signal):
     s = smooth_audio(signal, window_size=5)
     s = soften_peaks(s, threshold=0.85, reduction=0.7)
     s = s * 1.1
+    s = np.clip(s, -1.0, 1.0)   # zabezpieczenie przed przesterem
     return s
 
 
 def auto_for_humans(signal):
     """
-    Automatyczny tryb – wybiera UltraSoft lub SpeechClarity w zależności od ostrości sygnału.
+    Automatyczny tryb – wybiera UltraSoft lub SpeechClarity
+    w zależności od ostrości sygnału i impulsów.
     """
     signal = np.array(signal, dtype=float)
-    sharpness = np.mean(np.abs(np.diff(signal)))
-    if sharpness > 0.15:
+    diff = np.diff(signal)
+
+    sharpness = np.mean(np.abs(diff))
+    peak_sharpness = np.max(np.abs(diff))
+
+    if sharpness > 0.15 or peak_sharpness > 1.5:
         return ultra_soft(signal)
     else:
         return speech_clarity(signal)
 
+
+# ---------------------------------------------------------
+# 4. Obsługa WAV
+# ---------------------------------------------------------
 
 def load_wav(path):
     """
@@ -73,10 +95,13 @@ def load_wav(path):
         framerate = w.getframerate()
         frames = w.getnframes()
         raw = w.readframes(frames)
+
         fmt = "<" + "h" * (len(raw) // 2)
         data = struct.unpack(fmt, raw)
+
         if channels == 2:
             data = data[::2]
+
         signal = np.array(data) / 32768.0
         return signal, framerate
 
@@ -86,13 +111,19 @@ def save_wav(path, signal, framerate):
     Zapisuje sygnał float (-1..1) do pliku WAV mono.
     """
     data = (np.array(signal) * 32767).astype(np.int16)
+
     with wave.open(path, 'wb') as w:
         w.setnchannels(1)
         w.setsampwidth(2)
         w.setframerate(framerate)
+
         raw = struct.pack("<" + "h" * len(data), *data)
         w.writeframes(raw)
 
+
+# ---------------------------------------------------------
+# 5. Pipeline: load → process → save
+# ---------------------------------------------------------
 
 def process_file(input_path, output_path, mode="human"):
     """
@@ -113,4 +144,3 @@ def process_file(input_path, output_path, mode="human"):
         processed = signal
 
     save_wav(output_path, processed, rate)
-    
