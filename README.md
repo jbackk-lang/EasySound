@@ -50,4 +50,26 @@ EasySound potrafi:
 - wczytać plik WAV (`load_wav`)
 - przetworzyć go dowolnym trybem
 - zapisać wynik (`save_wav`)
-- wyk
+- wykonać pełny pipeline (`process_file`)
+
+---
+
+## Przykład użycia
+
+```python
+from easysound import process_file
+
+process_file("input.wav", "output.wav")
+
+Cel projektu
+EasySound ma pomagać ludziom:
+
+słyszeć dźwięki w sposób bardziej komfortowy,
+
+lepiej rozumieć mowę,
+
+redukować stres wywołany ostrymi bodźcami,
+
+poprawiać komunikację.
+
+To narzędzie wspierające, nie medyczne.
