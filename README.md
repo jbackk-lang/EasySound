@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="EasySound.png" width="220" alt="EasySound logo">
+</p>
+
+
 # EasySound
 
 EasySound to prosta biblioteka audio, która wygładza dźwięk tak, aby był łatwiejszy do słuchania i rozumienia.  
