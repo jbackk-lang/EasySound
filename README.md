@@ -6,6 +6,7 @@
 
 Program do filtrowania i wygładzania dźwięku z podglądem na żywo oraz wizualizacją waveform.  
 Obsługuje MP3, WAV, FLAC, OGG, M4A dzięki automatycznej konwersji przez ffmpeg.
+EasySound powstał, żeby pomóc osobom wrażliwym słuchowo — wygładza ostre dźwięki i poprawia komfort słuchania.
 
 ---
 
