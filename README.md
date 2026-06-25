@@ -138,6 +138,7 @@ psychoakustycznych:
 - human_friendly — redukcja centroidu widma poprawia percepcję mowy
   u dzieci i osób uczących się języka.
 ---
+.py
 import numpy as np
 
 import scipy.io.wavfile as wav
