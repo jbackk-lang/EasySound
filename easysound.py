@@ -158,7 +158,7 @@ def process_file(input_path, output_path, mode="auto", dry_wet=1.0):
         raise ValueError(f"Unknown mode: {mode}")
 
     # miksowanie oryginału i efektu
-    out = (1 - dry_wet) * data + dry_wet * wet
+    out = (1.0 - dry_wet) * data + dry_wet * wet
 
     save_wav(output_path, sr, out)
     return out
