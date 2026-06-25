@@ -2,28 +2,32 @@
   <img src="EasySound.png" width="220" alt="EasySound logo">
 </p>
 
-# EasySound — LIVE Preview + Waveform
-
-Program do filtrowania i wygładzania dźwięku z podglądem na żywo oraz wizualizacją waveform.  
+# EasySound — LIVE Preview + Waveform + J‑Clean
+Program do filtrowania, wygładzania i czyszczenia struktury dźwięku z podglądem na żywo oraz wizualizacją waveform.
 Obsługuje MP3, WAV, FLAC, OGG, M4A dzięki automatycznej konwersji przez ffmpeg.
-EasySound powstał, żeby pomóc osobom wrażliwym słuchowo — wygładza ostre dźwięki i poprawia komfort słuchania.
+
+EasySound powstał, żeby pomóc osobom wrażliwym słuchowo — wygładza ostre dźwięki, redukuje szum informacyjny
+i poprawia komfort słuchania.
 
 ---
 
 ## 🎧 Funkcje
-- Live Preview (odsłuch 1 sekundy po każdej zmianie suwaka)
-- Waveform (wykres fali w oknie programu)
-- Filtr dolnoprzepustowy
-- Wzmocnienie sygnału
-- Redukcja ostrych pików
-- Obsługa wielu formatów audio
-- Zapis wyniku do WAV
+
+- **Live Preview** — odsłuch 1 sekundy po każdej zmianie suwaka   
+- **Waveform** — wykres fali w oknie programu  
+- **Filtr dolnoprzepustowy** (Butterworth)  
+- **Wzmocnienie sygnału**  
+- **Redukcja ostrych pików**  
+- **J‑Clean (topologiczne czyszczenie struktury)** — wygładza skręt, usuwa szum informacyjny i przywraca czystą falę  
+- Obsługa wielu formatów audio  
+- Zapis wyniku do WAV  
 
 ---
 
 ## 🔧 Wymagania
-- Python 3.10–3.14
-- ffmpeg.exe w tym samym folderze co program
+
+- Python 3.10–3.14  
+- `ffmpeg.exe` w tym samym folderze co program  
 - Biblioteki:
   - numpy
   - scipy
@@ -33,7 +37,7 @@ EasySound powstał, żeby pomóc osobom wrażliwym słuchowo — wygładza ostre
 ---
 
 ## 🚀 Instalacja
-git clone https://github.com/jbackk-lang/EasySound.git (github.com in Bing)
+git clone https://github.com/jbackk-lang/EasySound.git
 cd EasySound
 pip install -r requirements.txt
 
@@ -41,47 +45,55 @@ pip install -r requirements.txt
 ---
 
 ## ▶️ Uruchomienie
-python livepreviewMP3_wave.py
+python EasySound_JClean.py
 
 ---
 
 ## 🖥️ Jak używać
+
 1. Kliknij **Wybierz plik audio**  
 2. Waveform pojawi się automatycznie  
 3. Ruszaj suwakami — usłyszysz efekt na żywo  
-4. Kliknij **Przetwórz cały plik**, aby zapisać wynik jako WAV  
+4. Kliknij **Oczyść strukturę (J‑Clean)**, aby odszumić i wygładzić falę  
+5. Kliknij **Przetwórz cały plik**, aby zapisać wynik jako WAV  
 
 ---
 
 ## 🧠 Jak działa EasySound
-EasySound wygładza dźwięk, redukuje ostre elementy i poprawia komfort słuchania.  
+
+EasySound wygładza dźwięk, redukuje ostre elementy i poprawia komfort słuchania .  
 Stosowane techniki:
-- filtr dolnoprzepustowy (butterworth)
-- wygładzanie oknem Hanninga
-- redukcja pików (threshold + scaling)
-- automatyczna konwersja MP3 → WAV
+
+- filtr dolnoprzepustowy (Butterworth)  
+- wygładzanie oknem Hanninga  
+- redukcja pików (threshold + scaling)  
+- automatyczna konwersja MP3 → WAV  
+- **J‑Clean** — topologiczne czyszczenie struktury sygnału (model J)
 
 ---
 
 ## 🎚 Tryby przetwarzania (biblioteka)
-| Tryb | Opis |
-|------|------|
-| human | miękkie wygładzenie |
-| ultra | maksymalne wygładzenie |
-| speech | poprawa zrozumiałości mowy |
-| auto | automatyczne wykrywanie ostrości |
-| smooth_audio | surowe wygładzenie |
-| soften_peaks | redukcja pików |
+
+| Tryb          | Opis |
+|---------------|------|
+| human         | miękkie wygładzenie |
+| ultra         | maksymalne wygładzenie |
+| speech        | poprawa zrozumiałości mowy |
+| auto          | automatyczne wykrywanie ostrości |
+| smooth_audio  | surowe wygładzenie |
+| soften_peaks  | redukcja pików |
+| **j_clean**   | czyszczenie struktury sygnału |
 
 ---
 
 ## 🎧 Zastosowania
-- nadwrażliwość słuchowa (autyzm, ADHD, hiperakuzja)
-- poprawa mowy (wykłady, podcasty)
-- redukcja kliknięć i trzasków
-- łagodzenie ostrych dźwięków
-- nagrania terenowe
-- osoby starsze z aparatami słuchowymi
+
+- nadwrażliwość słuchowa (autyzm, ADHD, hiperakuzja)  
+- poprawa mowy (wykłady, podcasty)  
+- redukcja kliknięć i trzasków  
+- łagodzenie ostrych dźwięków  
+- nagrania terenowe  
+- osoby starsze z aparatami słuchowymi  
 
 ---
 
@@ -89,7 +101,8 @@ Stosowane techniki:
 from easysound import process_file
 process_file("raw.wav", "soft.wav", mode="human")
 process_file("podcast.wav", "podcast_clean.wav", mode="auto")
-process_file("wyklad.wav", "wyklad_clarity.wav", mode="speech")
+from easysound import j_clean
+clean = j_clean(signal)
 
 ---
 
@@ -101,24 +114,17 @@ save_wav("output.wav", processed, rate)
 ---
 
 ## ✔️ Status projektu
-- LIVE PREVIEW — działa
-- Waveform — działa
-- 6 trybów przetwarzania — działa
-- pipeline WAV — kompletny
-- brak błędów importu
+
+- LIVE PREVIEW — działa  
+- Waveform — działa  
+- J‑Clean — działa  
+- 6 trybów przetwarzania — działa  
+- pipeline WAV — kompletny  
+- brak błędów importu  
 
 ---
-▶️ Jak używać (CLI)
-Kod
-from auto_compress_test import auto_compress_test
 
-print(auto_compress_test("test.wav"))
-Wynik:
-
-„Plik jest IDENTYCZNY po kompresji/dekompresji.”
-
-„Plik został ZMIENIONY przez kompresję.”
-
----
 ## 📄 Licencja
+
 MIT
+
