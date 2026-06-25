@@ -138,6 +138,54 @@ psychoakustycznych:
 - human_friendly — redukcja centroidu widma poprawia percepcję mowy
   u dzieci i osób uczących się języka.
 ---
+import numpy as np
+import scipy.io.wavfile as wav
+from scipy.signal import hilbert
+
+class EasySound:
+    def __init__(self, path):
+        self.rate, self.data = wav.read(path)
+        self.data = self.data.astype(np.float32)
+        self.norm = self.data / np.max(np.abs(self.data))
+
+    # τ — operator skrętu (lokalna zmiana fazy)
+    def tau(self):
+        analytic = hilbert(self.norm)
+        phase = np.unwrap(np.angle(analytic))
+        tau = np.gradient(phase)
+        return tau
+
+    # ρ — defekt (lokalna nierówność sygnału)
+    def rho(self):
+        rho = np.abs(np.gradient(self.norm))
+        rho[rho == 0] = 1e-9
+        return rho
+
+    # J — kompresja informacyjna (lokalna redukcja)
+    def J(self, tau):
+        return np.gradient(tau)
+
+    # Λ — transformacja (częściowy wzór)
+    def Lambda(self):
+        tau = self.tau()
+        rho = self.rho()
+        J = self.J(tau)
+        Lambda = (tau / rho) + J
+        return Lambda
+
+    def summary(self):
+        L = self.Lambda()
+        return {
+            "mean": float(np.mean(L)),
+            "std": float(np.std(L)),
+            "max": float(np.max(L)),
+            "min": float(np.min(L))
+        }
+
+# przykład użycia
+# es = EasySound("plik.wav")
+# print(es.summary())
+---
 ## 📄 Licencja
 
 MIT
