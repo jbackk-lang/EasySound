@@ -139,7 +139,9 @@ psychoakustycznych:
   u dzieci i osób uczących się języka.
 ---
 import numpy as np
+
 import scipy.io.wavfile as wav
+
 from scipy.signal import hilbert
 
 class EasySound:
