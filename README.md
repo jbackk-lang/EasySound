@@ -42,6 +42,27 @@ python livepreviewMP3.py
 - kliknij **Wybierz plik audio**
 - ruszaj suwakami, aby odsłuchać **LIVE PREVIEW**
 - kliknij **Przetwórz cały plik**, aby zapisać wynik jako WAV
+- 
+## 🔧 Jak uruchomić EasySound LIVE + Waveform
+
+1. Pobierz lub sklonuj repozytorium:
+   git clone https://github.com/jbackk-lang/EasySound.git
+
+2. Upewnij się, że w folderze z programem znajduje się `ffmpeg.exe`.
+   - Pobierz z: https://www.gyan.dev/ffmpeg/builds/
+   - Skopiuj `ffmpeg.exe` do tego samego katalogu co plik `.py`.
+
+3. Zainstaluj wymagane biblioteki:
+   pip install numpy scipy simpleaudio matplotlib
+
+4. Uruchom program:
+   python livepreviewMP3_wave.py
+
+5. W oknie aplikacji:
+   - kliknij **Wybierz plik audio**
+   - zobaczysz waveform (podgląd fali)
+   - ruszaj suwakami, aby odsłuchać **LIVE PREVIEW**
+   - kliknij **Przetwórz cały plik**, aby zapisać wynik jako WAV
 
 # EasySound
 
