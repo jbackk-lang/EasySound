@@ -108,6 +108,17 @@ save_wav("output.wav", processed, rate)
 - brak błędów importu
 
 ---
+▶️ Jak używać (CLI)
+Kod
+from auto_compress_test import auto_compress_test
 
+print(auto_compress_test("test.wav"))
+Wynik:
+
+„Plik jest IDENTYCZNY po kompresji/dekompresji.”
+
+„Plik został ZMIENIONY przez kompresję.”
+
+---
 ## 📄 Licencja
 MIT
