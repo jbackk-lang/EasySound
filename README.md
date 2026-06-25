@@ -63,6 +63,30 @@ python livepreviewMP3.py
    - zobaczysz waveform (podgląd fali)
    - ruszaj suwakami, aby odsłuchać **LIVE PREVIEW**
    - kliknij **Przetwórz cały plik**, aby zapisać wynik jako WAV
+  
+   - def update_waveform_plot():
+    if preview_data is None:
+        return
+    fig.clear()
+    ax = fig.add_subplot(111)
+
+    n = min(len(preview_data), preview_fs)
+    x = np.arange(n) / preview_fs
+
+    ax.plot(x, preview_data[:n], color="cyan", linewidth=0.8)
+
+    # znaczniki czasu co 0.1 s lub 0.2 s (automatycznie)
+    ax.set_xlabel("czas [s]")
+    ax.set_ylabel("amplituda")
+    ax.set_title("Waveform (preview)")
+
+    ax.grid(True, which="both", linestyle="--", linewidth=0.3, alpha=0.6)
+
+    # opcjonalnie: zaokrąglamy zakres do pełnej sekundy
+    ax.set_xlim(0, max(x) if max(x) < 1 else 1.0)
+
+    canvas.draw()
+
 
 # EasySound
 
