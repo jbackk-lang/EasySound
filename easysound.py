@@ -122,4 +122,20 @@ def save_wav(path, sr, data):
 def process_file(input_path, output_path, mode="auto"):
     sr, data = load_wav(input_path)
 
-    if mode == "
+    if mode == "auto":
+        out = auto_for_humans(data)
+    elif mode == "soften_peaks":
+        out = soften_peaks(data)
+    elif mode == "human_friendly":
+        out = human_friendly(data)
+    elif mode == "ultra_soft":
+        out = ultra_soft(data)
+    elif mode == "speech_clarity":
+        out = speech_clarity(data)
+    elif mode == "smooth":
+        out = smooth_audio(data)
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
+
+    save_wav(output_path, sr, out)
+    return out
