@@ -24,6 +24,24 @@ Działa z plikami MP3, WAV, FLAC, OGG, M4A — dzięki automatycznej konwersji p
   - simpleaudio
 
 ## Uruchomienie
+1. Pobierz lub sklonuj repozytorium:
+git clone https://github.com/jbackk-lang/EasySound.git (github.com in Bing)
+albo pobierz ZIP i rozpakuj.
+
+2. Upewnij się, że w folderze z programem znajduje się `ffmpeg.exe`.
+- Jeśli nie masz ffmpeg, pobierz stąd: https://www.gyan.dev/ffmpeg/builds/
+- Skopiuj `ffmpeg.exe` do tego samego folderu co plik `.py`.
+
+3. Zainstaluj wymagane biblioteki:
+
+pip install -r requirements.txt
+4. Uruchom program:
+python livepreviewMP3.py
+
+5. W oknie programu:
+- kliknij **Wybierz plik audio**
+- ruszaj suwakami, aby odsłuchać **LIVE PREVIEW**
+- kliknij **Przetwórz cały plik**, aby zapisać wynik jako WAV
 
 # EasySound
 
