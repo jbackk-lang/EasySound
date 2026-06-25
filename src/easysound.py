@@ -1,140 +1,164 @@
 import numpy as np
-
-WINDOWS = {
-    5: np.hanning(5).astype(np.float32),
-    7: np.hanning(7).astype(np.float32),
-    9: np.hanning(9).astype(np.float32),
-    21: np.hanning(21).astype(np.float32),
-}
-for k in WINDOWS:
-    WINDOWS[k] /= WINDOWS[k].sum()
-
-import wave
-import struct
-
-# ---------------------------------------------------------
-# 1. Wygładzanie sygnału (Hanning)
-# ---------------------------------------------------------
-
-def smooth_audio(signal, window_size=7):
-    """
-    Wygładzanie sygnału audio za pomocą okna Hanninga i konwolucji.
-    """
-    signal = np.array(signal, dtype=np.float32)
-    if window_size < 3:
-        return signal
-
-    window = WINDOWS.get(window_size)
-    if window is None:
-        window = np.hanning(window_size).astype(np.float32)
-        window /= window.sum()
-
-    return np.convolve(signal, window, mode='same')
+from scipy.io import wavfile
+from scipy.signal import hann, convolve
 
 
-# ---------------------------------------------------------
-# 2. Łagodzenie ostrych pików
-# ---------------------------------------------------------
-
-def soften_peaks(signal, threshold=0.8, reduction=0.5):
-    """
-    Łagodzenie ostrych pików powyżej progu.
-    """
-    signal = np.array(signal, dtype=np.float32)
-    peaks = np.abs(signal) > threshold
-    signal[peaks] *= reduction
+# -----------------------------
+# Walidacja wejścia
+# -----------------------------
+def _validate_signal(signal):
+    if signal is None:
+        raise ValueError("Signal is None.")
+    signal = np.asarray(signal, dtype=float)
+    if signal.ndim != 1:
+        raise ValueError("Signal must be 1‑D array.")
     return signal
 
 
-# ---------------------------------------------------------
-# 3. Tryby przetwarzania
-# ---------------------------------------------------------
+# -----------------------------
+# smooth_audio z odbiciem krawędzi
+# -----------------------------
+def smooth_audio(signal, window_size=51):
+    signal = _validate_signal(signal)
+    if window_size < 3:
+        return signal
 
+    pad = window_size // 2
+    padded = np.pad(signal, pad, mode="reflect")
+
+    window = hann(window_size)
+    window /= window.sum()
+
+    smoothed = convolve(padded, window, mode="same")
+    return smoothed[pad:-pad]
+
+
+# -----------------------------
+# soften_peaks — soft‑knee
+# -----------------------------
+def soften_peaks(signal, threshold=0.85, knee_width=0.15):
+    signal = _validate_signal(signal)
+    out = signal.copy()
+
+    abs_sig = np.abs(out)
+    over = abs_sig > threshold
+
+    # soft knee: płynne przejście
+    knee_end = threshold + knee_width
+    in_knee = (abs_sig > threshold) & (abs_sig < knee_end)
+
+    # część twarda
+    out[abs_sig >= knee_end] = np.sign(out[abs_sig >= knee_end]) * knee_end
+
+    # część miękka
+    ratio = (abs_sig[in_knee] - threshold) / knee_width
+    gain = 1 - ratio * 0.7  # 70% kompresji w kolanie
+    out[in_knee] *= gain
+
+    return out
+
+
+# -----------------------------
+# human_friendly
+# -----------------------------
 def human_friendly(signal):
-    s = smooth_audio(signal, window_size=9)
-    s = soften_peaks(s, threshold=0.7, reduction=0.6)
-    return s
+    s = smooth_audio(signal, window_size=41)
+    return soften_peaks(s, threshold=0.88, knee_width=0.12)
 
 
+# -----------------------------
+# ultra_soft
+# -----------------------------
 def ultra_soft(signal):
-    s = smooth_audio(signal, window_size=21)
-    s = soften_peaks(s, threshold=0.5, reduction=0.4)
-    return s
+    return smooth_audio(signal, window_size=121)
 
 
+# -----------------------------
+# speech_clarity — transjenty ×0.65
+# -----------------------------
 def speech_clarity(signal):
-    s = smooth_audio(signal, window_size=5)
-    s = soften_peaks(s, threshold=0.85, reduction=0.7)
-    s = s * 1.1
-    s = np.clip(s, -1.0, 1.0)
-    return s
+    signal = _validate_signal(signal)
+    s = smooth_audio(signal, window_size=21)
+    transients = signal - s
+    return s + 0.65 * transients
 
 
+# -----------------------------
+# Detekcja impulsów (poprawiona)
+# -----------------------------
+def _has_impulses(signal):
+    energy = np.abs(signal)
+    med = np.median(energy)
+    if med == 0:
+        return False
+    return np.any(energy > med * 4.5)
+
+
+# -----------------------------
+# auto_for_humans
+# -----------------------------
 def auto_for_humans(signal):
-    signal = np.array(signal, dtype=np.float32)
-    diff = np.diff(signal)
+    signal = _validate_signal(signal)
 
-    sharpness = np.mean(np.abs(diff))
-    peak_sharpness = np.max(np.abs(diff))
+    if _has_impulses(signal):
+        return soften_peaks(signal)
 
-    if sharpness > 0.15 or peak_sharpness > 1.5:
+    crest = np.max(np.abs(signal)) / (np.mean(np.abs(signal)) + 1e-9)
+
+    if crest < 2.0:
         return ultra_soft(signal)
-    else:
-        return speech_clarity(signal)
+    if crest < 3.0:
+        return human_friendly(signal)
+    return smooth_audio(signal)
 
 
-# ---------------------------------------------------------
-# 4. Obsługa WAV
-# ---------------------------------------------------------
-
+# -----------------------------
+# load_wav z obsługą błędów
+# -----------------------------
 def load_wav(path):
-    """
-    Wczytuje plik WAV i zwraca (signal, sample_rate).
-    """
-    with wave.open(path, 'rb') as w:
-        channels = w.getnchannels()
-        framerate = w.getframerate()
-        frames = w.getnframes()
-        raw = w.readframes(frames)
+    try:
+        sr, data = wavfile.read(path)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File not found: {path}")
+    except ValueError:
+        raise ValueError(f"Invalid or corrupted WAV file: {path}")
 
-        fmt = "<" + "h" * (len(raw) // 2)
-        data = struct.unpack(fmt, raw)
-
-        if channels == 2:
-            data = data[::2]
-
-        signal = np.array(data, dtype=np.float32) / 32768.0
-        return signal, framerate
+    data = data.astype(float)
+    if data.ndim > 1:
+        data = data.mean(axis=1)
+    data /= np.max(np.abs(data)) + 1e-9
+    return sr, data
 
 
-def save_wav(path, signal, framerate):
-    data = (np.array(signal) * 32767).astype(np.int16)
-
-    with wave.open(path, 'wb') as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(framerate)
-
-        raw = struct.pack("<" + "h" * len(data), *data)
-        w.writeframes(raw)
+def save_wav(path, sr, data):
+    data = np.asarray(data)
+    data = data / (np.max(np.abs(data)) + 1e-9)
+    wavfile.write(path, sr, (data * 32767).astype(np.int16))
 
 
-# ---------------------------------------------------------
-# 5. Pipeline: load → process → save
-# ---------------------------------------------------------
+# -----------------------------
+# process_file z dry/wet
+# -----------------------------
+def process_file(input_path, output_path, mode="auto", dry_wet=1.0):
+    sr, data = load_wav(input_path)
 
-def process_file(input_path, output_path, mode="human"):
-    signal, rate = load_wav(input_path)
-
-    if mode == "human":
-        processed = human_friendly(signal)
-    elif mode == "ultra":
-        processed = ultra_soft(signal)
-    elif mode == "speech":
-        processed = speech_clarity(signal)
-    elif mode == "auto":
-        processed = auto_for_humans(signal)
+    if mode == "auto":
+        wet = auto_for_humans(data)
+    elif mode == "soften_peaks":
+        wet = soften_peaks(data)
+    elif mode == "human_friendly":
+        wet = human_friendly(data)
+    elif mode == "ultra_soft":
+        wet = ultra_soft(data)
+    elif mode == "speech_clarity":
+        wet = speech_clarity(data)
+    elif mode == "smooth":
+        wet = smooth_audio(data)
     else:
-        processed = signal
+        raise ValueError(f"Unknown mode: {mode}")
 
-    save_wav(output_path, processed, rate)
+    # miksowanie oryginału i efektu
+    out = (1.0 - dry_wet) * data + dry_wet * wet
+
+    save_wav(output_path, sr, out)
+    return out
