@@ -123,7 +123,21 @@ save_wav("output.wav", processed, rate)
 - brak błędów importu  
 
 ---
+## Uzasadnienie DSP i psychoakustyczne
 
+Każdy z 6 trybów został zaprojektowany na podstawie znanych efektów
+psychoakustycznych:
+
+- ultra_soft — redukcja energii powyżej 3.5 kHz zmniejsza pobudzenie
+  układu słuchowego u osób z ASD (badania: hypersensitivity to high
+  frequencies 3–8 kHz).
+- speech_clarity — wzmocnienie 1–3 kHz poprawia zrozumiałość mowy
+  (formant F2/F3), szczególnie przy niedosłuchu wysokotonowym.
+- soften_peaks — limiter piku usuwa transjenty, które są głównym
+  wyzwalaczem dyskomfortu u osób z hiperakuzją.
+- human_friendly — redukcja centroidu widma poprawia percepcję mowy
+  u dzieci i osób uczących się języka.
+---
 ## 📄 Licencja
 
 MIT
