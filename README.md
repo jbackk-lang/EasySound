@@ -2,6 +2,28 @@
   <img src="EasySound.png" width="220" alt="EasySound logo">
 </p>
 
+# EasySound LIVE Preview
+
+Program do filtrowania dźwięku z podglądem na żywo (LIVE PREVIEW).
+Działa z plikami MP3, WAV, FLAC, OGG, M4A — dzięki automatycznej konwersji przez ffmpeg.
+
+## Funkcje
+- Podgląd efektu na żywo (1 sekunda audio)
+- Filtr dolnoprzepustowy
+- Wzmocnienie sygnału
+- Redukcja pików
+- Obsługa MP3/WAV/FLAC/M4A/OGG
+- Zapis do WAV
+
+## Wymagania
+- Python 3.10–3.14
+- ffmpeg.exe w tym samym folderze co program
+- Biblioteki:
+  - numpy
+  - scipy
+  - simpleaudio
+
+## Uruchomienie
 
 # EasySound
 
