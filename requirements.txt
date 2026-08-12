@@ -1,4 +1,6 @@
 numpy
 scipy
-simpleaudio
 matplotlib
+sounddevice
+soundfile
+pydub

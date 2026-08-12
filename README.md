@@ -30,6 +30,7 @@ Biblioteka (`easysound.py`) udostępnia:
 | `auto_for_humans` | automatycznie dobiera tryb na podstawie impulsowości i crest factora sygnału | — |
 | `j_clean` | szerokie wygładzanie + dodatkowy filtr, mieszany 70/30 z oryginałem | ~85 Hz (okno 513) |
 | `TIMDRAnalyzer` | eksperymentalny wskaźnik "szorstkości fazowej" sygnału (patrz niżej) | — |
+| `decode_audio` / `play_audio` (moduł `audio_playback`) | wczytywanie i odtwarzanie WAV/FLAC/OGG/MP3/M4A/AAC z jednolitą normalizacją do [-1,1] | — |
 
 \* Odcięcie −3dB jest **proporcjonalne do częstotliwości próbkowania** —
 każdy z trybów opiera się na oknie o stałej liczbie próbek, więc przy innym
@@ -52,8 +53,10 @@ Program GUI (`EasySound_JClean.py`) dodatkowo oferuje:
 
 - Python 3.10+
 - Biblioteki: `numpy`, `scipy`
-- Do GUI dodatkowo: `simpleaudio`, `matplotlib`, oraz `ffmpeg` w PATH lub w
-  folderze programu (tylko jeśli chcesz wczytywać pliki inne niż WAV)
+- Do odtwarzania audio (`audio_playback.py` i GUI): `sounddevice`,
+  `soundfile`, `pydub`
+- Do GUI dodatkowo: `matplotlib`, oraz `ffmpeg` w PATH lub w folderze
+  programu (wymagany dla formatów innych niż WAV/FLAC/OGG — MP3, M4A, AAC, ...)
 
 ```
 pip install -r requirements.txt
@@ -96,9 +99,41 @@ Mieszanie oryginału z efektem (dry/wet):
 process_file("input.wav", "output.wav", mode="ultra_soft", dry_wet=0.5)
 ```
 
+## 🔊 Odtwarzanie audio (WAV/FLAC/OGG/MP3/M4A/AAC)
+
+```python
+from audio_playback import decode_audio, play_audio
+
+# tylko dekodowanie (bez odtwarzania) — dziala bez PortAudio/karty dzwiekowej
+data, fs = decode_audio("plik.mp3")
+
+# dekodowanie + odtworzenie (wymaga PortAudio + urzadzenia audio)
+play_audio("plik.mp3")
+```
+
+`decode_audio` rozpoznaje format po rozszerzeniu: WAV/FLAC/OGG idą przez
+`soundfile`, pozostałe formaty (MP3, M4A, AAC, ...) przez `pydub` (wymaga
+`ffmpeg` w PATH). Niezależnie od formatu i głębi bitowej źródła, wynik jest
+znormalizowany do zakresu [-1, 1] — mono jako tablica 1-D, wielokanałowy
+dźwięk jako `(n_próbek, n_kanałów)`.
+
+**Skąd ten moduł się wziął:** użytkownik dostarczył gotowy fragment kodu do
+odtwarzania wielu formatów audio, z komentarzami `# działa` przy każdym
+formacie. Przy weryfikacji znaleziono realny błąd (patrz sekcja "Naprawione
+błędy" niżej) i moduł został przebudowany na testowalną, bezpieczną wersję.
+
 ## 🖥️ Uruchomienie GUI
 
+**Windows — najprościej:** dwuklik na `run.bat`. Skrypt sam tworzy
+środowisko wirtualne, instaluje zależności z `requirements.txt`, sprawdza
+obecność `ffmpeg` (potrzebny tylko dla formatów innych niż WAV) i uruchamia
+GUI. Okno pozostaje otwarte nawet przy błędzie, żeby dało się przeczytać
+komunikat.
+
+**Ręcznie (dowolny system):**
+
 ```
+pip install -r requirements.txt
 python EasySound_JClean.py
 ```
 
@@ -174,7 +209,7 @@ pip install pytest
 pytest tests/ -v
 ```
 
-44 testy, wszystkie przechodzą. Pokrycie: walidacja wejścia, wszystkie tryby
+55 testów, wszystkie przechodzą. Pokrycie: walidacja wejścia, wszystkie tryby
 przetwarzania (w tym granice pasma zmierzone przez FFT), `auto_for_humans`
 i jego reguły routingu (łącznie z udokumentowanym ograniczeniem detekcji
 impulsów na głośnym tle), pełny zapis/odczyt WAV (w tym mono-downmix ze
@@ -231,6 +266,30 @@ Podczas przeglądu i pisania testów znaleziono i naprawiono:
    wygładzanie w dziedzinie czasu (moving average), a nie selektywne EQ
    pasmowe, więc te konkretne liczby nie odpowiadały faktycznemu działaniu
    algorytmów. Zastąpione zmierzonymi wartościami −3dB.
+7. **Sztywno założony `dtype=np.int16` w kodzie odtwarzania audio.**
+   Fragment do odtwarzania MP3/M4A/AAC (dostarczony przez użytkownika, z
+   komentarzami "# działa" przy każdym formacie) dekodował surowe bajty z
+   `pydub` przez `np.frombuffer(raw, dtype=np.int16)`, ignorując faktyczną
+   `sample_width` zwróconą przez `pydub`. To działa dla większości typowych
+   plików MP3 (tam `pydub`/`ffmpeg` zwykle dają 16-bit), ale psuje się dla
+   źródeł dekodowanych do innej głębi — zweryfikowane na bezstratnym pliku
+   ALAC 24-bit w kontenerze `.m4a` (`sample_width=4`): błędny kod dawał
+   sygnał **dwa razy za długi** (każda 4-bajtowa próbka odczytana jako dwie
+   2-bajtowe) i całkowicie zaszumiony. Naprawione w nowym module
+   `audio_playback.py` — `decode_audio()` odczytuje realną `sample_width` z
+   `pydub` i poprawnie normalizuje każdą głębię bitową (8/16/24/32-bit) do
+   zakresu [-1, 1]. Regresyjny test: `test_lossless_alac_24bit_m4a_regression`.
+8. **`simpleaudio` nie instalował się na Windows bez kompilatora C.**
+   `pip install -r requirements.txt` kończył się błędem `Microsoft Visual
+   C++ 14.0 or greater is required` — `simpleaudio` nie ma opublikowanego
+   gotowego kola (wheel) dla części wersji Pythona na Windows i próbuje
+   kompilować rozszerzenie C od zera, co wymaga zainstalowanych Microsoft
+   C++ Build Tools. Ponieważ `sounddevice` (już w zależnościach, używany
+   przez `audio_playback.py`) robi dokładnie to samo i ma gotowe koła na
+   Windows bez potrzeby kompilatora, GUI (`EasySound_JClean.py`) zostało
+   przepisane, żeby używać `sounddevice.play()` zamiast
+   `simpleaudio.play_buffer()`. `simpleaudio` usunięte z
+   `requirements.txt` — jeden mniej zbędny backend audio.
 
 ---
 
@@ -249,6 +308,11 @@ Podczas przeglądu i pisania testów znaleziono i naprawiono:
 - Konwersja formatów innych niż WAV wymaga zewnętrznego `ffmpeg` — biblioteka
   go nie dostarcza ani nie sprawdza jego obecności przed próbą konwersji.
 - `TIMDRAnalyzer` — patrz sekcja wyżej.
+- `play_audio()` (moduł `audio_playback`) wymaga zainstalowanej biblioteki
+  systemowej PortAudio (backend `sounddevice`) oraz działającego urządzenia
+  audio — nie działa w środowiskach headless bez PortAudio. `decode_audio()`
+  (samo dekodowanie, bez odtwarzania) nie ma tej zależności i działa wszędzie
+  — dlatego biblioteka rozdziela te dwie funkcje.
 
 ---
 
@@ -265,7 +329,10 @@ Podczas przeglądu i pisania testów znaleziono i naprawiono:
 - GUI (Live Preview, Waveform, J-Clean) — działa (zależy od Tkinter/ekranu),
   poprawka przepełnienia int16 zastosowana, logika DSP przetestowana
   pośrednio przez `easysound.py`
-- 7 gotowych przykładów użycia w `examples/`
+- `audio_playback.py` — odtwarzanie WAV/FLAC/OGG/MP3/M4A/AAC z poprawną
+  obsługą różnych głębi bitowych (8/16/24/32-bit), przetestowane (11 testów,
+  w tym regresja na błędzie znalezionym w dostarczonym kodzie użytkownika)
+- 8 gotowych przykładów użycia w `examples/`
 
 ---
 
@@ -275,11 +342,15 @@ Podczas przeglądu i pisania testów znaleziono i naprawiono:
 EasySound/
 ├── easysound.py              # kopia src/easysound.py (dla `import easysound`)
 ├── src/
-│   └── easysound.py           # biblioteka: tryby przetwarzania, WAV I/O, j_clean, TIMDRAnalyzer
-├── EasySound_JClean.py        # opcjonalne GUI (Tkinter + matplotlib + simpleaudio)
-├── examples/                  # 7 gotowych, uruchamialnych przykładów
+│   ├── easysound.py            # biblioteka: tryby przetwarzania, WAV I/O, j_clean, TIMDRAnalyzer
+│   └── audio_playback.py       # dekodowanie + odtwarzanie WAV/FLAC/OGG/MP3/M4A/AAC
+├── audio_playback.py           # kopia src/audio_playback.py (dla `import audio_playback`)
+├── EasySound_JClean.py         # opcjonalne GUI (Tkinter + matplotlib + sounddevice)
+├── run.bat                     # launcher GUI dla Windows (venv + instalacja + start)
+├── examples/                   # 8 gotowych, uruchamialnych przykładów
 ├── tests/
-│   └── test_easysound.py      # 44 testy (pytest)
+│   ├── test_easysound.py       # 44 testy (pytest)
+│   └── test_audio_playback.py  # 11 testów (pytest, częściowo wymaga ffmpeg)
 ├── requirements.txt
 ├── pyproject.toml
 ├── index.html                 # prosta strona informacyjna

@@ -3,7 +3,7 @@ import subprocess
 from scipy.io import wavfile
 from scipy.signal import butter, lfilter
 from tkinter import Tk, Button, Scale, HORIZONTAL, Label, filedialog
-import simpleaudio as sa
+import sounddevice as sd
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -30,7 +30,10 @@ def convert_to_wav(path):
 
 def load_wav(path):
     fs, data = wavfile.read(path)
-    return fs, data.astype(np.float32)
+    data = data.astype(np.float32)
+    if data.ndim > 1:
+        data = data.mean(axis=1)
+    return fs, data
 
 # ---------------------------------------
 # FILTRY DSP
@@ -84,7 +87,7 @@ def play_preview():
     filtered = lowpass(preview_data, cutoff, preview_fs)
     audio_int16 = apply_gain_and_soften(filtered, gain, soften)
 
-    sa.play_buffer(audio_int16.tobytes(), 1, 2, preview_fs)
+    sd.play(audio_int16, preview_fs)
 
 # ---------------------------------------
 # J‑CLEAN — PRZYCISK
@@ -100,7 +103,7 @@ def apply_jclean():
 
     update_waveform_plot()
     cleaned_int16 = np.clip(cleaned, -32767, 32767).astype(np.int16)
-    sa.play_buffer(cleaned_int16.tobytes(), 1, 2, preview_fs)
+    sd.play(cleaned_int16, preview_fs)
 
 # ---------------------------------------
 # WYBÓR PLIKU
