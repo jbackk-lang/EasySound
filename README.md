@@ -158,6 +158,7 @@ dostarczania nagrania):
 | Usuwanie trzasków z nagrań terenowych / starych źródeł | `example_declick_jclean.py` | `j_clean` |
 | Subtelne, częściowe wygładzenie (nie w 100%) | `example_dry_wet_mix.py` | `dry_wet` |
 | Przetwarzanie wsadowe wielu plików | `example_batch_processing.py` | `auto` |
+| Odtwarzanie audio (WAV/FLAC/OGG/MP3/M4A/AAC) | `example_playback.py` | `decode_audio` / `play_audio` |
 | Porównanie "szorstkości" sygnału przed/po (QA) | `example_timdr_analysis.py` | `TIMDRAnalyzer` |
 | Minimalny przykład | `example.py` | `auto` |
 
