@@ -41,11 +41,25 @@ w `tests/test_easysound.py` pilnuje, żeby kod i ta tabela się nie rozjechały.
 
 Program GUI (`EasySound_JClean.py`) dodatkowo oferuje:
 
-- **Live Preview** — odsłuch 1 sekundy po każdej zmianie suwaka
-- **Waveform** — wykres fali w oknie programu
+- **Live Preview** — odsłuch pierwszych 10 sekund pliku po każdej zmianie
+  suwaka (`PREVIEW_SECONDS` w `EasySound_JClean.py`)
+- **Waveform (przed/po)** — dwa wykresy fali jeden pod drugim, wspólna skala
+  amplitudy, pokazujące sygnał przed i po aktualnym przetwarzaniu (tryb
+  biblioteki + filtr suwaków, albo J-Clean)
+- **Tryb biblioteki** — radiobuttony z trybami `easysound.py`
+  (`auto`/`soften_peaks`/`human_friendly`/`ultra_soft`/`speech_clarity`/
+  `smooth`, plus `Brak`). Wzajemnie się wykluczają (jeden na raz — dokładnie
+  jak `mode` w `process_file()`, bo część z nich to już gotowe złożenia
+  pozostałych, np. `human_friendly` = `smooth_audio`+`soften_peaks`), ale
+  łączą się swobodnie z resztą kontrolek w oknie: filtrem Butterwortha,
+  wzmocnieniem/redukcją pików i J-Clean — te stosują się po kolei, jedna po
+  drugiej
 - filtr dolnoprzepustowy Butterwortha (niezależny od trybów bibliotecznych)
 - **J-Clean** — przycisk uruchamiający `j_clean` na podglądzie
-- konwersję MP3/FLAC/OGG/M4A → WAV przez zewnętrzny `ffmpeg`
+- **Zatrzymaj odsłuch** — przerywa aktualnie odtwarzany podgląd
+- konwersję MP3/FLAC/OGG/M4A → WAV przez zewnętrzny `ffmpeg`, z czytelnym
+  komunikatem błędu w oknie programu (zamiast awarii), gdy ffmpeg jest
+  niedostępny albo plik jest uszkodzony
 
 ---
 
