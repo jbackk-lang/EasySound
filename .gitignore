@@ -1,0 +1,22 @@
+# Srodowisko wirtualne (tworzone przez run.bat / `python -m venv venv`)
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# Pliki tymczasowe z konwersji audio (ffmpeg), na wszelki wypadek
+temp_input.wav
+easysound_*.wav
+
+# Edytory / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
